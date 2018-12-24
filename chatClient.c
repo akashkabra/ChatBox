@@ -37,5 +37,5 @@ char *getIP(char *hostname) {
 }
 
 int getPortNumber(char *portNumber) {
-    
+
 }

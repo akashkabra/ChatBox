@@ -12,7 +12,6 @@ int main (int argc, char ** argv) {
 
     //Make sure arguments are right
     checkArgs(argc, argv);
-    
 }
 
 void checkArgs(int argc, char ** argv) {
