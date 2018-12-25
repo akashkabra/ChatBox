@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
+#include <errno.h>
 
 #include "chatClient.h"
 
@@ -29,6 +29,7 @@ int main (int argc, char **argv) {
 
     startConnection(argv[1]);
 
+    printf(" testinggg12\n");
 /*
     if(checkOrder == 1) {
         //need to convert hostname to IP address
@@ -49,7 +50,7 @@ void startConnection(char * hostName) {
     struct addrinfo *results;
     struct addrinfo *rp;
     int info = -1;
-    int socketfd;
+    int socketfd = -1;
 
     //finding the IP addresses
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -58,10 +59,11 @@ void startConnection(char * hostName) {
     hints.ai_flags = 0;
     hints.ai_protocol = 0;          // Any protocol
 
-    info = getaddrinfo(hostName, "121212", &hints, &results);
+    printf("testing5\n");
+    info = getaddrinfo(hostName, "12122", &hints, &results);
     if (info != 0) {
         fprintf(stderr, "Fatal Error: getaddrinfo: %s \n", gai_strerror(info));
-        exit(0);
+        exit(-1);
     }
     /* 
     *   else .. getaddinfo() returns a list of IP addresses. Try each
@@ -84,8 +86,11 @@ void startConnection(char * hostName) {
    if (rp == NULL) {
        //No addresses succeeded
        fprintf(stderr, "Fatal Error: Bad Address -- Count not connect.\n");
-       exit(0);
+       exit(-1);
    }
+
+   char *testMessage = "Client connected!";
+   send(socketfd, testMessage, (strlen(testMessage)+1), 0);
    
    printf("test12\n");
 
@@ -99,7 +104,7 @@ void checkArgs(int argc, char **argv) {
     */
     if(argc != 3) {
         fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting...\n");
-        exit(0);
+        exit(-1);
     }
 
     int checkFirstArg = isalpha(argv[1][0]);
@@ -118,7 +123,7 @@ int getPortNumber(char *portNumber) {
     for (i = 0; i < strlen(portNumber); i++) {
         if(!isdigit(portNumber[i])) {
             fprintf(stderr, "Fatal Error: %s is not a valid port number\n", portNumber);
-            exit(0);
+            exit(-1);
         }
     }
     portNum = atoi(portNumber);
