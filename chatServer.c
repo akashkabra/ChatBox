@@ -3,12 +3,11 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "chatServer.h"
+
 //To run the program after creating exec
 //  ./chatServer <portNumber>
 
-#define STDIN 0
-#define STDOUT 1
-#define STDERR 2
 
 int main (int argc, char ** argv) {
 
@@ -23,6 +22,6 @@ void checkArgs(int argc, char ** argv) {
     *   2 - Port number
     */
     if(argc != 2) {
-        fprintf(STDERR, "Fatal Error: Wrong amount of arguments. Exiting.../n");
+        fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting.../n");
     }
 }

@@ -1,3 +1,3 @@
 
 
-void checkArgs (int argc, char ** argv) {
+void checkArgs (int argc, char ** argv);

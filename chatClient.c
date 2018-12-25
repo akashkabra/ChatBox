@@ -3,15 +3,18 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+
+#include "chatClient.h"
 
 //To run the program after creating exec
 //  ./chatClient <hostname> <portNumber>
 //  or
 //  ./chatClient <IP address> <portNumber>
 
-#define STDIN 0
-#define STDOUT 1
-#define STDERR 2
 
 char *G_ip;
 int G_port = -1;
@@ -24,7 +27,7 @@ int main (int argc, char **argv) {
     checkArgs(argc, argv);
     G_port = getPortNumber(argv[2]);
 
-    startConnection();
+    startConnection(argv[1]);
 
 /*
     if(checkOrder == 1) {
@@ -40,9 +43,52 @@ int main (int argc, char **argv) {
     
 }
 
-void startConnection() {
+void startConnection(char * hostName) {
     //this is where all the socket and networking things will go.
-    
+    struct addrinfo hints;
+    struct addrinfo *results;
+    struct addrinfo *rp;
+    int info = -1;
+    int socketfd;
+
+    //finding the IP addresses
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;    //Allows for IPv4 & IPv6
+    hints.ai_socktype = SOCK_DGRAM;  //Datagram socket
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;          // Any protocol
+
+    info = getaddrinfo(hostName, "121212", &hints, &results);
+    if (info != 0) {
+        fprintf(stderr, "Fatal Error: getaddrinfo: %s \n", gai_strerror(info));
+        exit(0);
+    }
+    /* 
+    *   else .. getaddinfo() returns a list of IP addresses. Try each
+    *   until one connects successful, or try again.
+    */
+
+   
+   for(rp = results; rp != NULL; rp = rp->ai_next) {
+       socketfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+       if (socketfd == -1) {
+           printf("i wonder\n");
+           continue;
+       }
+       if (connect(socketfd, rp->ai_addr, rp->ai_addrlen) != -1) {
+           printf("success \n");
+           break; //SUCCESS!
+       }
+       //close(socketfd);
+   }
+   if (rp == NULL) {
+       //No addresses succeeded
+       fprintf(stderr, "Fatal Error: Bad Address -- Count not connect.\n");
+       exit(0);
+   }
+   
+   printf("test12\n");
+
 }
 
 void checkArgs(int argc, char **argv) {
@@ -52,7 +98,7 @@ void checkArgs(int argc, char **argv) {
     *   And, check if input is IP address or hostname
     */
     if(argc != 3) {
-        fprintf(STDERR, "Fatal Error: Wrong amount of arguments. Exiting.../n");
+        fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting...\n");
         exit(0);
     }
 
@@ -71,7 +117,7 @@ int getPortNumber(char *portNumber) {
     int i = 0;
     for (i = 0; i < strlen(portNumber); i++) {
         if(!isdigit(portNumber[i])) {
-            fprintf(STDERR, "Fatal Error: %s is not a valid port number\n", portNumber);
+            fprintf(stderr, "Fatal Error: %s is not a valid port number\n", portNumber);
             exit(0);
         }
     }
