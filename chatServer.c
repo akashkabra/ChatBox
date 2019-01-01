@@ -19,6 +19,10 @@ int G_socketfd = -1;
 struct sockaddr_in G_address;   //Address
 int G_addrlen = sizeof(G_address);  //size of address --> accept()
 
+//Mutex for changing clientCounter in acceptClientThread() --> USE FOR LATER
+pthread_mutex_t mutex_G_clientCounter = PTHREAD_MUTEX_INITIALIZER;
+int G_clientCounter = 0;  //Max of 2 clients
+
 
 int main (int argc, char ** argv) {
 
@@ -82,42 +86,17 @@ void setConnection() {
 
     // NOW.... when listening and accepting --> Create a new thread and put listening and accept in there.
     // And then.. send the return value of accept() to another thread to do all the work for that client.
-    
-    /*
-    listen(G_socketfd, 2);
-    int tempAccept = accept(G_socketfd, (struct sockaddr *)&G_address, (socklen_t *)&G_addrlen);
-    if (tempAccept < 0) {
-        fprintf(stderr, "Fatal Error: (accept() error) %d: %s\n", errno, strerror(errno));
-        exit(-1);
-    }
-
-    char buffer[500];
-    read(tempAccept, buffer, 500);
-
-    printf("Read: %s\n", buffer);
-
-    
-    char *message = "Hello Client, this is the server.";
-    send(tempAccept, message, (strlen(message)+1), 0);
-
-    //Let client know server is shutting down.
-    char *shutDown = "End The Program!";
-    send(tempAccept, shutDown, (strlen(shutDown)+1), 0);
-
-    */
-
 
     pthread_t tid;
-    pthread_create(&tid, NULL, listenAndAcceptThread, NULL);
+    pthread_create(&tid, NULL, acceptClientThread, NULL);
 
-    //make sure program doesn't end
-    while(1) {}
+    //make sure program doens't end
+    while(1) { }
 }
 
 
-//threading
-void *listenAndAcceptThread(void *args) {
-
+//To listen and accept multiple clients
+void *acceptClientThread(void *args) {
     while(1) {
         listen(G_socketfd, 2);
 
@@ -135,9 +114,11 @@ void *listenAndAcceptThread(void *args) {
     }
 }
 
+//This is where everything regarding the client occurs.
 void *clientThread(void *args) {
     int *temp = (int*)args;
     int clientNum = *temp;
+    printf("clientNum: %d \n", clientNum);
 
     char buffer[500];
     int bufferLen = 500;
