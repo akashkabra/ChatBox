@@ -82,32 +82,47 @@ void setConnection() {
     // NOW.... when listening and accepting --> Create a new thread and put listening and accept in there.
     // And then.. send the return value of accept() to another thread to do all the work for that client.
     
-    pthread_t tid;
-    pthread_create(&tid, NULL, listenAndAcceptThread, NULL);
+    listen(G_socketfd, 2);
+    int tempAccept = accept(G_socketfd, (struct sockaddr *)&G_address, (socklen_t *)&G_addrlen);
+    if (tempAccept < 0) {
+        fprintf(stderr, "Fatal Error: (accept() error) %d: %s\n", errno, strerror(errno));
+        exit(-1);
+    }
 
-    //make sure program doesn't end
-    while(1) {}
+    char buffer[500];
+    int bufferLen = 500;
+    read(tempAccept, buffer, bufferLen);
+
+    printf("Read: %s\n", buffer);
+
+    
+
+    send(tempAccept, "Hello", 6, 0);
+
+
+    // pthread_t tid;
+    // pthread_create(&tid, NULL, listenAndAcceptThread, NULL);
+
+    // //make sure program doesn't end
+    // while(1) {}
 }
 
+/*
 //threading
 void *listenAndAcceptThread(void *args) {
 
     while(1) {
         listen(G_socketfd, 2);
-    printf("hello?????\n");
+        printf("hello?????\n");
 
         int tempAccept = accept(G_socketfd, (struct sockaddr *)&G_address, (socklen_t *)&G_addrlen);
-    printf("hello??\n");
+        send(tempAccept, "Hello", 6, 0);
+        printf("hello??\n");
         if (tempAccept < 0) {
             fprintf(stderr, "Fatal Error: (accept() error) %d: %s\n", errno, strerror(errno));
             exit(-1);
         }
         printf("SUCCESS \n");
-
-        char buffer[500];
-        int bufferLen = 500;
-        read(tempAccept, buffer, bufferLen);
-        printf("%s\n", buffer);
 
         pthread_t tid;
         pthread_create(&tid, NULL, clientThread, &tempAccept);
@@ -119,6 +134,11 @@ void *clientThread(void *args) {
     int clientNum = *temp;
     printf("here?");
 
+    char buffer[500];
+    int bufferLen = 500;
+    read(clientNum, buffer, bufferLen);
+    printf("%s\n", buffer);
 
 
 }
+*/

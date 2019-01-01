@@ -17,7 +17,7 @@
 
 
 char *G_ip;
-int G_port = -1;
+int G_Port = -1;
 int IPorHost = -1;
 int checkOrder = -1;    // 1 if hostname, 0 is IP address.
 
@@ -33,10 +33,10 @@ int main (int argc, char **argv) {
 
     //Setting up everything.
     checkArgs(argc, argv);
-    G_port = getPortNumber(argv[2]);
+    G_Port = getPortNumber(argv[2]);
 
     getIPfromHost(argv[1]);
-    startConnection();
+    startConnection(argv[1]);
 
     printf(" testinggg12\n");
 /*
@@ -53,7 +53,43 @@ int main (int argc, char **argv) {
     
 }
 
-void startConnection() {
+void startConnection(char *hostname) {
+    int socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketfd == -1) {
+        fprintf(stderr, "Fatal Error: (socket()): %d: %s\n", errno, strerror(errno));
+        exit(-1);
+    }
+
+    struct sockaddr_in serverAddr;  //Used for connect() in connection to server
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(G_Port);
+    
+    //Go through each IP address and try to connect to each IP until successfully connected.
+    char ipAddress[256];
+    for (infoTraverse = info; infoTraverse != NULL; infoTraverse = infoTraverse->ai_next) {
+        getnameinfo(infoTraverse->ai_addr, infoTraverse->ai_addrlen, ipAddress, sizeof (ipAddress), NULL, 0, NI_NUMERICHOST);
+        serverAddr.sin_addr.s_addr = inet_addr(ipAddress);
+        puts(ipAddress);
+
+        inet_pton(AF_INET, ipAddress, &serverAddr.sin_addr);
+
+        int connectSuccess = -1;
+
+        connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+        printf("ashello?\n");
+        printf("connectSuccess: %d \n", connectSuccess);
+        if (connectSuccess == 0) {
+            printf("Successfully Connected to host %s with IP %s\n", hostname, ipAddress);
+            break;
+        }
+    }
+
+    char *message = "Connection Successful!";
+    send(socketfd, message, (strlen(message)+1), 0);
+
+    
+    
 
 }
 
