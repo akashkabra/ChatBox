@@ -15,6 +15,8 @@
 //  or
 //  ./chatClient <IP address> <portNumber>
 
+//Messages sent/received can be 255 characters long
+
 
 char *G_ip;
 int G_Port = -1;
@@ -63,32 +65,34 @@ void startConnection(char *hostname) {
     
     //Go through each IP address and try to connect to each IP until successfully connected.
     char ipAddress[256];
-    for (infoTraverse = info; infoTraverse != NULL; infoTraverse = infoTraverse->ai_next) {
-        getnameinfo(infoTraverse->ai_addr, infoTraverse->ai_addrlen, ipAddress, sizeof (ipAddress), NULL, 0, NI_NUMERICHOST);
-        serverAddr.sin_addr.s_addr = inet_addr(ipAddress);
-        //puts(ipAddress);
+    int finished = 1;
+    while(finished == 1) {
+        for (infoTraverse = info; infoTraverse != NULL; infoTraverse = infoTraverse->ai_next) {
+            getnameinfo(infoTraverse->ai_addr, infoTraverse->ai_addrlen, ipAddress, sizeof (ipAddress), NULL, 0, NI_NUMERICHOST);
+            serverAddr.sin_addr.s_addr = inet_addr(ipAddress);
+            //puts(ipAddress);
 
-        inet_pton(AF_INET, ipAddress, &serverAddr.sin_addr);
+            inet_pton(AF_INET, ipAddress, &serverAddr.sin_addr);
 
-        int connectSuccess = -1;
+            int connectSuccess = -1;
 
-        connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-        printf("connectSuccess: %d\n", connectSuccess);
-        if (connectSuccess == 0) {
-            printf("Successfully Connected to host \"%s\" with IP %s\n", hostname, ipAddress);
-            break;
-        } else {
-            fprintf(stderr, "Error: Connection to host \"%s\" with IP %s failed\n", hostname, ipAddress);
+            connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+            printf("connectSuccess: %d\n", connectSuccess);
+            if (connectSuccess == 0) {
+                printf("Successfully Connected to host \"%s\" with IP %s\n", hostname, ipAddress);
+                finished = 0;
+                break;
+            } else {
+                fprintf(stderr, "Error: Connection to host \"%s\" with IP %s failed\n", hostname, ipAddress);
+            }
+        }
+        if(finished == 1) {
+            printf("Trying again in 3 seconds...\n");
+            sleep(3);
         }
     }
 
-    /*
-    * Next, make two threads
-    * First one  will be for getting messages
-    * Second one will be for sending messages
-    */
-
-
+ /*  // Testing Purposes
     char *message = "Connection Successful!";
     send(socketfd, message, (strlen(message)+1), 0);
 
@@ -96,7 +100,53 @@ void startConnection(char *hostname) {
     read(socketfd, buffer, 500);
 
     printf("Read: %s\n", buffer);
+*/
 
+    /*
+    * Next, make two threads
+    * First one  will be for getting messages
+    * Second one will be for sending messages
+    */
+
+    pthread_t tidRead;
+    pthread_t tidSend;
+    pthread_create(&tidRead, NULL, threadRead, &socketfd);
+    pthread_create(&tidSend, NULL, threadSend, &socketfd);
+
+    while(1) { /* Keep programing running */}
+
+
+}
+
+// Thread for getting messages from the server
+void *threadRead(void *args) {
+    int *temp = (int*)args;
+    int serverID = *temp;
+    //Messages can be 255 characters long
+    char buffer[256];
+    int length = 256;
+
+    while(1) {
+        strcpy(buffer, "skip");
+        read(serverID, buffer, length);
+        if(strcmp(buffer, "skip") != 0) {
+            printf("Server: %s\n", buffer);
+        }
+    }
+}
+
+// Thread for sending messages to the server
+void *threadSend(void *args) {
+    int *temp = (int*)args;
+    int serverID = *temp;
+    //Messages can be 255 characters long
+    char buffer[256];
+    int length = 256;
+
+    while(1) {
+        fgets(buffer, length, stdin);
+        send(serverID, buffer, length, 0);
+    } 
 }
 
 
