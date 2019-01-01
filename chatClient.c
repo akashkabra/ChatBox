@@ -21,13 +21,22 @@ int G_port = -1;
 int IPorHost = -1;
 int checkOrder = -1;    // 1 if hostname, 0 is IP address.
 
+
+//All these are for IP address
+struct addrinfo hints;
+struct addrinfo *info;
+struct addrinfo *infoTraverse;
+
+
+
 int main (int argc, char **argv) {
 
     //Setting up everything.
     checkArgs(argc, argv);
     G_port = getPortNumber(argv[2]);
 
-    startConnection(argv[1]);
+    getIPfromHost(argv[1]);
+    startConnection();
 
     printf(" testinggg12\n");
 /*
@@ -44,57 +53,92 @@ int main (int argc, char **argv) {
     
 }
 
-void startConnection(char * hostName) {
-    //this is where all the socket and networking things will go.
-    struct addrinfo hints;
-    struct addrinfo *results;
-    struct addrinfo *rp;
-    int info = -1;
-    int socketfd = -1;
+void startConnection() {
 
-    //finding the IP addresses
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC;    //Allows for IPv4 & IPv6
+}
+
+void getIPfromHost(char *hostname) {
+    hints.ai_family = AF_INET;    //Allows for IPv4 only
     hints.ai_socktype = SOCK_DGRAM;  //Datagram socket
     hints.ai_flags = 0;
     hints.ai_protocol = 0;          // Any protocol
 
-    printf("testing5\n");
-    info = getaddrinfo(hostName, "12122", &hints, &results);
-    if (info != 0) {
+    int result = getaddrinfo(hostname, NULL, &hints, &info);
+    if(result != 0) {
         fprintf(stderr, "Fatal Error: getaddrinfo: %s \n", gai_strerror(info));
         exit(-1);
     }
-    /* 
-    *   else .. getaddinfo() returns a list of IP addresses. Try each
-    *   until one connects successful, or try again.
-    */
 
-   
-   for(rp = results; rp != NULL; rp = rp->ai_next) {
-       socketfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-       if (socketfd == -1) {
-           printf("i wonder\n");
-           continue;
-       }
-       if (connect(socketfd, rp->ai_addr, rp->ai_addrlen) != -1) {
-           printf("success \n");
-           break; //SUCCESS!
-       }
-       //close(socketfd);
-   }
-   if (rp == NULL) {
-       //No addresses succeeded
-       fprintf(stderr, "Fatal Error: Bad Address -- Count not connect.\n");
-       exit(-1);
-   }
+/*  // make sure all the ip addresses print out.
+    char host[256];
+    for (infoTraverse = info; infoTraverse != NULL; infoTraverse = infoTraverse->ai_next) {
 
-   char *testMessage = "Client connected!";
-   send(socketfd, testMessage, (strlen(testMessage)+1), 0);
-   
-   printf("test12\n");
-
+        getnameinfo(infoTraverse->ai_addr, infoTraverse->ai_addrlen, host, sizeof (host), NULL, 0, NI_NUMERICHOST);
+        puts(host);
+    }
+*/
 }
+
+
+
+
+// void startConnection(char * hostName) {
+//     //this is where all the socket and networking things will go.
+//     struct addrinfo hints;
+//     struct addrinfo *results;
+//     struct addrinfo *rp;
+//     int info = -1;
+//     int socketfd = -1;
+
+//     //finding the IP addresses
+//     memset(&hints, 0, sizeof(struct addrinfo));
+//     hints.ai_family = AF_INET;    //Allows for IPv4 only
+//     hints.ai_socktype = SOCK_DGRAM;  //Datagram socket
+//     hints.ai_flags = 0;
+//     hints.ai_protocol = 0;          // Any protocol
+
+//     printf("testing5\n");
+//     info = getaddrinfo(hostName, "12122", &hints, &results);
+//     if (info != 0) {
+//         fprintf(stderr, "Fatal Error: getaddrinfo: %s \n", gai_strerror(info));
+//         exit(-1);
+//     }
+//     /* 
+//     *   else .. getaddinfo() returns a list of IP addresses. Try each
+//     *   until one connects successful, or try again.
+//     */
+
+   
+//     for(rp = results; rp != NULL; rp = rp->ai_next) {
+//         socketfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+//         if (socketfd == -1) {
+//             printf("i wonder\n");
+//             continue;
+//         }
+//         if (connect(socketfd, rp->ai_addr, rp->ai_addrlen) != -1) {
+//             printf("success \n");
+//             break; //SUCCESS!
+//         }
+//         //close(socketfd);
+//     }
+//     if (rp == NULL) {
+//         //No addresses succeeded
+//         fprintf(stderr, "Fatal Error: Bad Address -- Count not connect.\n");
+//         exit(-1);
+//     }
+
+
+//     char *testMessage = "Client connected!";
+//     send(socketfd, testMessage, (strlen(testMessage)+1), 0);
+    
+//     char buffer[500];
+//     int bufferLen = 500;
+//     read(socketfd, buffer, bufferLen);
+//     printf("%s\n", buffer);
+   
+//    printf("test12\n");
+
+// }
 
 void checkArgs(int argc, char **argv) {
     /*
