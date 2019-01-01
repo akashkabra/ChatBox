@@ -129,6 +129,12 @@ void *threadRead(void *args) {
     while(1) {
         strcpy(buffer, "skip");
         read(serverID, buffer, length);
+
+        if(strcmp(buffer, "End The Program!") == 0) {
+            printf("Server shut down... Closing program...\n");
+            exit(-1);
+        }
+        
         if(strcmp(buffer, "skip") != 0) {
             printf("Server: %s\n", buffer);
         }

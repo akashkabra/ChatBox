@@ -79,9 +79,11 @@ void setConnection() {
         exit(-1);
     }
 
+
     // NOW.... when listening and accepting --> Create a new thread and put listening and accept in there.
     // And then.. send the return value of accept() to another thread to do all the work for that client.
     
+    /*
     listen(G_socketfd, 2);
     int tempAccept = accept(G_socketfd, (struct sockaddr *)&G_address, (socklen_t *)&G_addrlen);
     if (tempAccept < 0) {
@@ -98,30 +100,35 @@ void setConnection() {
     char *message = "Hello Client, this is the server.";
     send(tempAccept, message, (strlen(message)+1), 0);
 
+    //Let client know server is shutting down.
+    char *shutDown = "End The Program!";
+    send(tempAccept, shutDown, (strlen(shutDown)+1), 0);
 
-    // pthread_t tid;
-    // pthread_create(&tid, NULL, listenAndAcceptThread, NULL);
+    */
 
-    // //make sure program doesn't end
-    // while(1) {}
+
+    pthread_t tid;
+    pthread_create(&tid, NULL, listenAndAcceptThread, NULL);
+
+    //make sure program doesn't end
+    while(1) {}
 }
 
-/*
+
 //threading
 void *listenAndAcceptThread(void *args) {
 
     while(1) {
         listen(G_socketfd, 2);
-        printf("hello?????\n");
 
         int tempAccept = accept(G_socketfd, (struct sockaddr *)&G_address, (socklen_t *)&G_addrlen);
-        send(tempAccept, "Hello", 6, 0);
-        printf("hello??\n");
+        //send(tempAccept, "Hello", 6, 0);
+        //printf("hello??\n");
         if (tempAccept < 0) {
             fprintf(stderr, "Fatal Error: (accept() error) %d: %s\n", errno, strerror(errno));
             exit(-1);
         }
-        printf("SUCCESS \n");
+        //printf("SUCCESS \n");
 
         pthread_t tid;
         pthread_create(&tid, NULL, clientThread, &tempAccept);
@@ -131,13 +138,12 @@ void *listenAndAcceptThread(void *args) {
 void *clientThread(void *args) {
     int *temp = (int*)args;
     int clientNum = *temp;
-    printf("here?");
 
     char buffer[500];
     int bufferLen = 500;
-    read(clientNum, buffer, bufferLen);
-    printf("%s\n", buffer);
-
+    while (1) {
+        read(clientNum, buffer, bufferLen);
+        printf("%s", buffer);
+    }
 
 }
-*/
