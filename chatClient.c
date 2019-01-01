@@ -30,7 +30,6 @@ struct addrinfo *info;
 struct addrinfo *infoTraverse;
 
 
-
 int main (int argc, char **argv) {
 
     //Setting up everything.
@@ -154,7 +153,7 @@ void *threadRead(void *args) {
         }
 
         if(strcmp(buffer, "skip") != 0) {
-            printf("Server: %s\n", buffer);
+            printf("Server: %s", buffer);
         }
     }
 }

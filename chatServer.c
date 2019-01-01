@@ -18,6 +18,7 @@ int G_port = -1;
 int G_socketfd = -1;    
 struct sockaddr_in G_address;   //Address
 int G_addrlen = sizeof(G_address);  //size of address --> accept()
+int clientList[2];
 
 
 
@@ -99,11 +100,12 @@ void setConnection() {
             send(tempAccept, failMessage, (strlen(failMessage) +1), 0);
             continue;
         }
+        clientList[clientCounter] = tempAccept;
         char *ackConnection = "Connection Successful!";
         send(tempAccept, ackConnection, (strlen(ackConnection) +1), 0);
 
-        pthread_t tid;
-        pthread_create(&tid, NULL, clientThread, &tempAccept);
+        pthread_t tidRead;
+        pthread_create(&tidRead, NULL, clientReadThread, &tempAccept);
         clientCounter++;
     }
 
@@ -111,7 +113,7 @@ void setConnection() {
 
 
 //This is where everything regarding the client occurs.
-void *clientThread(void *args) {
+void *clientReadThread(void *args) {
     int *temp = (int*)args;
     int clientNum = *temp;
     printf("clientNum: %d \n", clientNum);
@@ -120,7 +122,15 @@ void *clientThread(void *args) {
     int bufferLen = 500;
     while (1) {
         read(clientNum, buffer, bufferLen);
+        sendMessage(clientNum, buffer);
         printf("%s", buffer);
     }
+}
 
+void sendMessage(int clientNum, char *buffer) {
+    if(clientList[0] != clientNum) {
+        send(clientList[0],buffer, (strlen(buffer) + 1), 0);
+    } else if (clientList[1] != clientNum) {
+        send(clientList[1],buffer, (strlen(buffer) + 1), 0);
+    }
 }
