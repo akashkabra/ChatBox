@@ -19,9 +19,6 @@ int G_socketfd = -1;
 struct sockaddr_in G_address;   //Address
 int G_addrlen = sizeof(G_address);  //size of address --> accept()
 
-//Mutex for changing clientCounter in acceptClientThread() --> USE FOR LATER
-pthread_mutex_t mutex_G_clientCounter = PTHREAD_MUTEX_INITIALIZER;
-int G_clientCounter = 0;  //Max of 2 clients
 
 
 int main (int argc, char ** argv) {
@@ -83,23 +80,11 @@ void setConnection() {
         exit(-1);
     }
 
-
-    // NOW.... when listening and accepting --> Create a new thread and put listening and accept in there.
-    // And then.. send the return value of accept() to another thread to do all the work for that client.
-
-    pthread_t tid;
-    pthread_create(&tid, NULL, acceptClientThread, NULL);
-
-    //make sure program doens't end
-    while(1) { }
-}
-
-
-//To listen and accept multiple clients
-void *acceptClientThread(void *args) {
+    int clientCounter = 0;
+    //Only two clients can connect, if more try to connect, they get an error.
+    //This will also make sure program keeps running.
     while(1) {
         listen(G_socketfd, 2);
-
         int tempAccept = accept(G_socketfd, (struct sockaddr *)&G_address, (socklen_t *)&G_addrlen);
         //send(tempAccept, "Hello", 6, 0);
         //printf("hello??\n");
@@ -108,11 +93,22 @@ void *acceptClientThread(void *args) {
             exit(-1);
         }
         //printf("SUCCESS \n");
+        // Make sure only two client can connect.
+        if (clientCounter == 2) {
+            char *failMessage = "Two Clients already connected";
+            send(tempAccept, failMessage, (strlen(failMessage) +1), 0);
+            continue;
+        }
+        char *ackConnection = "Connection Successful!";
+        send(tempAccept, ackConnection, (strlen(ackConnection) +1), 0);
 
         pthread_t tid;
         pthread_create(&tid, NULL, clientThread, &tempAccept);
+        clientCounter++;
     }
+
 }
+
 
 //This is where everything regarding the client occurs.
 void *clientThread(void *args) {

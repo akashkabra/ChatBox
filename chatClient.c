@@ -64,7 +64,7 @@ void startConnection(char *hostname) {
     serverAddr.sin_port = htons(G_Port);
     
     //Go through each IP address and try to connect to each IP until successfully connected.
-    char ipAddress[256];
+    char ipAddress[64];
     int finished = 1;
     while(finished == 1) {
         for (infoTraverse = info; infoTraverse != NULL; infoTraverse = infoTraverse->ai_next) {
@@ -79,6 +79,13 @@ void startConnection(char *hostname) {
             connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
             printf("connectSuccess: %d\n", connectSuccess);
             if (connectSuccess == 0) {
+                // Make sure connection is set.
+                char buffer[50];
+                read(socketfd, buffer, 50);
+                if(strcmp(buffer, "Connection Successful!") != 0) {
+                    fprintf(stderr, "Fatal Error: Failed to connect.\n");
+                    exit(-1);
+                }
                 printf("Successfully Connected to host \"%s\" with IP %s\n", hostname, ipAddress);
                 finished = 0;
                 break;
@@ -91,6 +98,9 @@ void startConnection(char *hostname) {
             sleep(3);
         }
     }
+
+
+
 
  /*  // Testing Purposes
     char *message = "Connection Successful!";
@@ -107,6 +117,14 @@ void startConnection(char *hostname) {
     * First one  will be for getting messages
     * Second one will be for sending messages
     */
+
+    // This will be used for when the server sends a message to the other 
+    // client, it will use this name
+    // NEED TO DO MORE STUFF HERE. and in the server side for this
+    char name[50];
+    printf("Please enter your first name: ");
+    fgets(name, 50, stdin);
+    send(socketfd, name, 50, 0);
 
     pthread_t tidRead;
     pthread_t tidSend;
@@ -134,7 +152,7 @@ void *threadRead(void *args) {
             printf("Server shut down... Closing program...\n");
             exit(-1);
         }
-        
+
         if(strcmp(buffer, "skip") != 0) {
             printf("Server: %s\n", buffer);
         }
@@ -152,7 +170,7 @@ void *threadSend(void *args) {
     while(1) {
         fgets(buffer, length, stdin);
         send(serverID, buffer, length, 0);
-    } 
+    }
 }
 
 
