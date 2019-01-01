@@ -38,7 +38,6 @@ int main (int argc, char **argv) {
     getIPfromHost(argv[1]);
     startConnection(argv[1]);
 
-    printf(" testinggg12\n");
 /*
     if(checkOrder == 1) {
         //need to convert hostname to IP address
@@ -48,9 +47,6 @@ int main (int argc, char **argv) {
         //Don't need to do anything.. already an IP Address.
     }
 */
-
-
-    
 }
 
 void startConnection(char *hostname) {
@@ -70,28 +66,39 @@ void startConnection(char *hostname) {
     for (infoTraverse = info; infoTraverse != NULL; infoTraverse = infoTraverse->ai_next) {
         getnameinfo(infoTraverse->ai_addr, infoTraverse->ai_addrlen, ipAddress, sizeof (ipAddress), NULL, 0, NI_NUMERICHOST);
         serverAddr.sin_addr.s_addr = inet_addr(ipAddress);
-        puts(ipAddress);
+        //puts(ipAddress);
 
         inet_pton(AF_INET, ipAddress, &serverAddr.sin_addr);
 
         int connectSuccess = -1;
 
         connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-        printf("ashello?\n");
-        printf("connectSuccess: %d \n", connectSuccess);
+        printf("connectSuccess: %d\n", connectSuccess);
         if (connectSuccess == 0) {
-            printf("Successfully Connected to host %s with IP %s\n", hostname, ipAddress);
+            printf("Successfully Connected to host \"%s\" with IP %s\n", hostname, ipAddress);
             break;
+        } else {
+            fprintf(stderr, "Error: Connection to host \"%s\" with IP %s failed\n", hostname, ipAddress);
         }
     }
+
+    /*
+    * Next, make two threads
+    * First one  will be for getting messages
+    * Second one will be for sending messages
+    */
+
 
     char *message = "Connection Successful!";
     send(socketfd, message, (strlen(message)+1), 0);
 
-    
-    
+    char buffer[500];
+    read(socketfd, buffer, 500);
+
+    printf("Read: %s\n", buffer);
 
 }
+
 
 void getIPfromHost(char *hostname) {
     hints.ai_family = AF_INET;    //Allows for IPv4 only
@@ -101,7 +108,7 @@ void getIPfromHost(char *hostname) {
 
     int result = getaddrinfo(hostname, NULL, &hints, &info);
     if(result != 0) {
-        fprintf(stderr, "Fatal Error: getaddrinfo: %s \n", gai_strerror(info));
+        fprintf(stderr, "Fatal Error: getaddrinfo: %s\n", gai_strerror(info));
         exit(-1);
     }
 
@@ -115,66 +122,18 @@ void getIPfromHost(char *hostname) {
 */
 }
 
-
-
-
-// void startConnection(char * hostName) {
-//     //this is where all the socket and networking things will go.
-//     struct addrinfo hints;
-//     struct addrinfo *results;
-//     struct addrinfo *rp;
-//     int info = -1;
-//     int socketfd = -1;
-
-//     //finding the IP addresses
-//     memset(&hints, 0, sizeof(struct addrinfo));
-//     hints.ai_family = AF_INET;    //Allows for IPv4 only
-//     hints.ai_socktype = SOCK_DGRAM;  //Datagram socket
-//     hints.ai_flags = 0;
-//     hints.ai_protocol = 0;          // Any protocol
-
-//     printf("testing5\n");
-//     info = getaddrinfo(hostName, "12122", &hints, &results);
-//     if (info != 0) {
-//         fprintf(stderr, "Fatal Error: getaddrinfo: %s \n", gai_strerror(info));
-//         exit(-1);
-//     }
-//     /* 
-//     *   else .. getaddinfo() returns a list of IP addresses. Try each
-//     *   until one connects successful, or try again.
-//     */
-
-   
-//     for(rp = results; rp != NULL; rp = rp->ai_next) {
-//         socketfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-//         if (socketfd == -1) {
-//             printf("i wonder\n");
-//             continue;
-//         }
-//         if (connect(socketfd, rp->ai_addr, rp->ai_addrlen) != -1) {
-//             printf("success \n");
-//             break; //SUCCESS!
-//         }
-//         //close(socketfd);
-//     }
-//     if (rp == NULL) {
-//         //No addresses succeeded
-//         fprintf(stderr, "Fatal Error: Bad Address -- Count not connect.\n");
-//         exit(-1);
-//     }
-
-
-//     char *testMessage = "Client connected!";
-//     send(socketfd, testMessage, (strlen(testMessage)+1), 0);
-    
-//     char buffer[500];
-//     int bufferLen = 500;
-//     read(socketfd, buffer, bufferLen);
-//     printf("%s\n", buffer);
-   
-//    printf("test12\n");
-
-// }
+int getPortNumber(char *portNumber) {
+    int portNum = 0;
+    int i = 0;
+    for (i = 0; i < strlen(portNumber); i++) {
+        if(!isdigit(portNumber[i])) {
+            fprintf(stderr, "Fatal Error: %s is not a valid port number\n", portNumber);
+            exit(-1);
+        }
+    }
+    portNum = atoi(portNumber);
+    return portNum;
+}
 
 void checkArgs(int argc, char **argv) {
     /*
@@ -189,24 +148,10 @@ void checkArgs(int argc, char **argv) {
 
     int checkFirstArg = isalpha(argv[1][0]);
     if (checkFirstArg > 0) {
-        printf("This is a letter.\n");
+        //printf("This is a letter.\n");
         checkOrder = 1;
     } else {
-        printf("This is NOT a letter.\n");
+        //printf("This is NOT a letter.\n");
         checkOrder = 0;
     }
-}
-
-int getPortNumber(char *portNumber) {
-    int portNum = 0;
-    int i = 0;
-    for (i = 0; i < strlen(portNumber); i++) {
-        if(!isdigit(portNumber[i])) {
-            fprintf(stderr, "Fatal Error: %s is not a valid port number\n", portNumber);
-            exit(-1);
-        }
-    }
-    portNum = atoi(portNumber);
-    return portNum;
-
 }

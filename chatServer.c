@@ -90,14 +90,13 @@ void setConnection() {
     }
 
     char buffer[500];
-    int bufferLen = 500;
-    read(tempAccept, buffer, bufferLen);
+    read(tempAccept, buffer, 500);
 
     printf("Read: %s\n", buffer);
 
     
-
-    send(tempAccept, "Hello", 6, 0);
+    char *message = "Hello Client, this is the server.";
+    send(tempAccept, message, (strlen(message)+1), 0);
 
 
     // pthread_t tid;
