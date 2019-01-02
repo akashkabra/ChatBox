@@ -31,7 +31,7 @@ int main (int argc, char ** argv) {
     setConnection();
 }
 
-
+ 
 void setConnection() {
 
     G_socketfd = socket(AF_INET, SOCK_STREAM, 0);

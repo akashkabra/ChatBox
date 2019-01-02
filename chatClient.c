@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <errno.h>
+#include <arpa/inet.h>
+#include <pthread.h>
 
 #include "chatClient.h"
 
@@ -15,10 +17,8 @@
 //  or
 //  ./chatClient <IP address> <portNumber>
 
-//Messages sent/received can be 255 characters long
+//Messages sent/received can be 255 - (length of name) characters long
 
-
-char *G_ip;
 int G_Port = -1;
 int IPorHost = -1;
 int checkOrder = -1;    // 1 if hostname, 0 is IP address.
@@ -42,7 +42,7 @@ int main (int argc, char **argv) {
 /*
     if(checkOrder == 1) {
         //need to convert hostname to IP address
-        G_ip = getIPfromHost(argv[1]);
+        getIPfromHost(argv[1]);
     }
     if(checkOrder == 0) {
         //Don't need to do anything.. already an IP Address.
@@ -182,7 +182,7 @@ void getIPfromHost(char *hostname) {
 
     int result = getaddrinfo(hostname, NULL, &hints, &info);
     if(result != 0) {
-        fprintf(stderr, "Fatal Error: getaddrinfo: %s\n", gai_strerror(info));
+        fprintf(stderr, "Fatal Error: getaddrinfo: %s\n", gai_strerror(result));
         exit(-1);
     }
 
