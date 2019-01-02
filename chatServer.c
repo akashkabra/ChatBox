@@ -20,7 +20,6 @@ struct sockaddr_in G_address;   //Address
 int G_addrlen = sizeof(G_address);  //size of address --> accept()
 
 int clientList[2];
-char *clientNameList[2];
 
 int main (int argc, char ** argv) {
 
@@ -31,7 +30,7 @@ int main (int argc, char ** argv) {
     setConnection();
 }
 
- 
+//Find clients trying to connect
 void setConnection() {
 
     G_socketfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -45,7 +44,6 @@ void setConnection() {
         fprintf(stderr, "Fatal Error: (setsockopt() error) %d: %s\n", errno, strerror(errno));
         exit(-1);
     }
-
 
     G_address.sin_family = AF_INET; 
     G_address.sin_addr.s_addr = INADDR_ANY;   // Any address
@@ -80,15 +78,12 @@ void setConnection() {
         char *ackConnection = "Connection Successful!";
         send(tempAccept, ackConnection, (strlen(ackConnection) +1), 0);
 
-        // now... need to strcat the name in front of all messages!
-
+        //thread for the server to read messages from the client
         pthread_t tidRead;
         pthread_create(&tidRead, NULL, clientReadThread, &tempAccept);
         clientCounter++;
     }
-
 }
-
 
 //This is where everything regarding the client occurs.
 void *clientReadThread(void *args) {
@@ -110,6 +105,7 @@ void *clientReadThread(void *args) {
 
     char buffer[500];
     int bufferLen = 500;
+    //Read from both clients at any given time.
     while (1) {
         read(clientNum, buffer, bufferLen);
         sendMessage(clientNum, buffer, finalName);
@@ -117,21 +113,22 @@ void *clientReadThread(void *args) {
     }
 }
 
+//Send the message from one client to another client and vice versa
 void sendMessage(int clientNum, char *buffer, char *name) {
-    
     char *finalStr = NULL;
     finalStr = (char*)malloc(sizeof(char) * ((strlen(buffer) + strlen(name))));
     strcat(finalStr, name);
     strcat(finalStr, ": ");
     strcat(finalStr, buffer);
 
+    //The message sent also shows the client's name.
     if(clientList[0] != clientNum) {
         send(clientList[0],finalStr, (strlen(finalStr) + 1), 0);
     } else if (clientList[1] != clientNum) {
         send(clientList[1],finalStr, (strlen(finalStr) + 1), 0);
     }
 }
-
+//Make sure the entered port number is actually a number.
 int getPortNumber(char *portNumber) {
     int portNum = 0;
     int i = 0;
@@ -143,14 +140,12 @@ int getPortNumber(char *portNumber) {
     }
     portNum = atoi(portNumber);
     return portNum;
-
 }
 
 void checkArgs(int argc, char ** argv) {
     /*
     *   Make sure we have 2 arguments
-    *   1 - exec file name
-    *   2 - Port number
+    *   exec file name, port number
     */
     if(argc != 2) {
         fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting.../n");

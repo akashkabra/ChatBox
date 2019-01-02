@@ -20,15 +20,12 @@
 //Messages sent/received can be 255 - (length of name) characters long
 
 int G_Port = -1;
-int IPorHost = -1;
 int checkOrder = -1;    // 1 if hostname, 0 is IP address.
-
 
 //All these are for IP address
 struct addrinfo hints;
 struct addrinfo *info;
 struct addrinfo *infoTraverse;
-
 
 int main (int argc, char **argv) {
 
@@ -42,7 +39,6 @@ int main (int argc, char **argv) {
 /*
     if(checkOrder == 1) {
         //need to convert hostname to IP address
-        getIPfromHost(argv[1]);
     }
     if(checkOrder == 0) {
         //Don't need to do anything.. already an IP Address.
@@ -50,6 +46,7 @@ int main (int argc, char **argv) {
 */
 }
 
+// Sets up the whole socket and connection with server.
 void startConnection(char *hostname) {
     int socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketfd == -1) {
@@ -74,7 +71,6 @@ void startConnection(char *hostname) {
             inet_pton(AF_INET, ipAddress, &serverAddr.sin_addr);
 
             int connectSuccess = -1;
-
             connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
             printf("connectSuccess: %d\n", connectSuccess);
             if (connectSuccess == 0) {
@@ -98,33 +94,13 @@ void startConnection(char *hostname) {
         }
     }
 
-
-
-
- /*  // Testing Purposes
-    char *message = "Connection Successful!";
-    send(socketfd, message, (strlen(message)+1), 0);
-
-    char buffer[500];
-    read(socketfd, buffer, 500);
-
-    printf("Read: %s\n", buffer);
-*/
-
-    /*
-    * Next, make two threads
-    * First one  will be for getting messages
-    * Second one will be for sending messages
-    */
-
-    // This will be used for when the server sends a message to the other 
-    // client, it will use this name
-    // NEED TO DO MORE STUFF HERE. and in the server side for this
+    //Client enters their name or nickname for other client to see
     char name[50];
     printf("Please enter your first name: ");
     fgets(name, 50, stdin);
     send(socketfd, name, 50, 0);
 
+    // Threads for the client to send and read messages at any time.
     pthread_t tidRead;
     pthread_t tidSend;
     pthread_create(&tidRead, NULL, threadRead, &socketfd);
@@ -135,35 +111,29 @@ void startConnection(char *hostname) {
 
 }
 
-// Thread for getting messages from the server
+// Thread for getting messages from the server (from the other client)
 void *threadRead(void *args) {
     int *temp = (int*)args;
     int serverID = *temp;
-    //Messages can be 255 characters long
+    //Messages can be 255 characters long -> (255 - length of name)
     char buffer[256];
     int length = 256;
 
     while(1) {
-        strcpy(buffer, "skip");
+        strcpy(buffer, "somethingrandomthatnooneWillType");
         read(serverID, buffer, length);
-
-        if(strcmp(buffer, "End The Program!") == 0) {
-            printf("Server shut down... Closing program...\n");
-            exit(-1);
-        }
-
-        if(strcmp(buffer, "skip") != 0) {
+        if(strcmp(buffer, "somethingrandomthatnooneWillType") != 0) {
             //printf("Server: %s", buffer);
             printf("%s", buffer);
         }
     }
 }
 
-// Thread for sending messages to the server
+// Thread for sending messages to the server (which sends to other client)
 void *threadSend(void *args) {
     int *temp = (int*)args;
     int serverID = *temp;
-    //Messages can be 255 characters long
+    //Messages can be 255 characters long -> (255 - length of other client name)
     char buffer[256];
     int length = 256;
 
@@ -196,6 +166,7 @@ void getIPfromHost(char *hostname) {
 */
 }
 
+//Make sure the entered port number is actually a number.
 int getPortNumber(char *portNumber) {
     int portNum = 0;
     int i = 0;
