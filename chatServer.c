@@ -18,9 +18,9 @@ int G_port = -1;
 int G_socketfd = -1;    
 struct sockaddr_in G_address;   //Address
 int G_addrlen = sizeof(G_address);  //size of address --> accept()
+
 int clientList[2];
-
-
+char *clientNameList[2];
 
 int main (int argc, char ** argv) {
 
@@ -31,30 +31,6 @@ int main (int argc, char ** argv) {
     setConnection();
 }
 
-void checkArgs(int argc, char ** argv) {
-    /*
-    *   Make sure we have 2 arguments
-    *   1 - exec file name
-    *   2 - Port number
-    */
-    if(argc != 2) {
-        fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting.../n");
-    }
-}
-
-int getPortNumber(char *portNumber) {
-    int portNum = 0;
-    int i = 0;
-    for (i = 0; i < strlen(portNumber); i++) {
-        if(!isdigit(portNumber[i])) {
-            fprintf(stderr, "Fatal Error: %s is not a valid port number\n", portNumber);
-            exit(-1);
-        }
-    }
-    portNum = atoi(portNumber);
-    return portNum;
-
-}
 
 void setConnection() {
 
@@ -104,6 +80,8 @@ void setConnection() {
         char *ackConnection = "Connection Successful!";
         send(tempAccept, ackConnection, (strlen(ackConnection) +1), 0);
 
+        // now... need to strcat the name in front of all messages!
+
         pthread_t tidRead;
         pthread_create(&tidRead, NULL, clientReadThread, &tempAccept);
         clientCounter++;
@@ -116,21 +94,65 @@ void setConnection() {
 void *clientReadThread(void *args) {
     int *temp = (int*)args;
     int clientNum = *temp;
-    printf("clientNum: %d \n", clientNum);
+    printf("clientNum: %d connected!\n", clientNum);
+
+    char name[50];
+    char finalName[50];
+    read(clientNum, name, 50);
+//    printf("Name: %s", name);
+    
+    for(int i = 0; i < strlen(name)+1; i++) {
+        if (name[i] == '\n') {
+            break;
+        }
+        finalName[i] = name[i];
+    }
 
     char buffer[500];
     int bufferLen = 500;
     while (1) {
         read(clientNum, buffer, bufferLen);
-        sendMessage(clientNum, buffer);
-        printf("%s", buffer);
+        sendMessage(clientNum, buffer, finalName);
+//        printf("%s", buffer);
     }
 }
 
-void sendMessage(int clientNum, char *buffer) {
+void sendMessage(int clientNum, char *buffer, char *name) {
+    
+    char *finalStr = NULL;
+    finalStr = (char*)malloc(sizeof(char) * ((strlen(buffer) + strlen(name))));
+    strcat(finalStr, name);
+    strcat(finalStr, ": ");
+    strcat(finalStr, buffer);
+
     if(clientList[0] != clientNum) {
-        send(clientList[0],buffer, (strlen(buffer) + 1), 0);
+        send(clientList[0],finalStr, (strlen(finalStr) + 1), 0);
     } else if (clientList[1] != clientNum) {
-        send(clientList[1],buffer, (strlen(buffer) + 1), 0);
+        send(clientList[1],finalStr, (strlen(finalStr) + 1), 0);
+    }
+}
+
+int getPortNumber(char *portNumber) {
+    int portNum = 0;
+    int i = 0;
+    for (i = 0; i < strlen(portNumber); i++) {
+        if(!isdigit(portNumber[i])) {
+            fprintf(stderr, "Fatal Error: %s is not a valid port number\n", portNumber);
+            exit(-1);
+        }
+    }
+    portNum = atoi(portNumber);
+    return portNum;
+
+}
+
+void checkArgs(int argc, char ** argv) {
+    /*
+    *   Make sure we have 2 arguments
+    *   1 - exec file name
+    *   2 - Port number
+    */
+    if(argc != 2) {
+        fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting.../n");
     }
 }

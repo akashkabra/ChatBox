@@ -1,7 +1,6 @@
 
-
-void checkArgs (int argc, char ** argv);
 void setConnection();
-int getPortNumber(char *portNumber);
-void *acceptClientThread(void *args);
 void *clientReadThread(void *args);
+void sendMessage(int clientNum, char *buffer, char *name);
+int getPortNumber(char *portNumber);
+void checkArgs (int argc, char ** argv);

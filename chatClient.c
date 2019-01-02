@@ -153,7 +153,8 @@ void *threadRead(void *args) {
         }
 
         if(strcmp(buffer, "skip") != 0) {
-            printf("Server: %s", buffer);
+            //printf("Server: %s", buffer);
+            printf("%s", buffer);
         }
     }
 }
