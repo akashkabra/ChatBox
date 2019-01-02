@@ -20,7 +20,6 @@
 //Messages sent/received can be 255 - (length of name) characters long
 
 int G_Port = -1;
-int checkOrder = -1;    // 1 if hostname, 0 is IP address.
 
 //All these are for IP address
 struct addrinfo hints;
@@ -35,15 +34,6 @@ int main (int argc, char **argv) {
 
     getIPfromHost(argv[1]);
     startConnection(argv[1]);
-
-/*
-    if(checkOrder == 1) {
-        //need to convert hostname to IP address
-    }
-    if(checkOrder == 0) {
-        //Don't need to do anything.. already an IP Address.
-    }
-*/
 }
 
 // Sets up the whole socket and connection with server.
@@ -89,8 +79,8 @@ void startConnection(char *hostname) {
             }
         }
         if(finished == 1) {
-            printf("Trying again in 3 seconds...\n");
-            sleep(3);
+            printf("Trying again in 5 seconds...\n");
+            sleep(5);
         }
     }
 
@@ -189,14 +179,5 @@ void checkArgs(int argc, char **argv) {
     if(argc != 3) {
         fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting...\n");
         exit(-1);
-    }
-
-    int checkFirstArg = isalpha(argv[1][0]);
-    if (checkFirstArg > 0) {
-        //printf("This is a letter.\n");
-        checkOrder = 1;
-    } else {
-        //printf("This is NOT a letter.\n");
-        checkOrder = 0;
     }
 }

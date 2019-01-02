@@ -149,5 +149,6 @@ void checkArgs(int argc, char ** argv) {
     */
     if(argc != 2) {
         fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting.../n");
+        exit(-1);
     }
 }
