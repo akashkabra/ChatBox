@@ -15,8 +15,8 @@ Server uses threads to read everything the client says.
 
 ### Server
 The server can be run from any computer by running the following command:  
-    ./chatServer <portNumber>  
---> <portNumber> can be anything above 8000, but below 65535.  
+    ./chatServer \<portNumber\>  
+--> \<portNumber\> can be anything above 8000, but below 65535.  
 --> Please do not user port numbers between 0 and 1023 because these numbers are usually reserved.  
 --> A recommended range is: 10000 to 30000.
 
@@ -24,9 +24,9 @@ So, for example:    ./chatServer 12122
 
 ### Client
 The client can be run from any computer by running the following command:  
-    ./chatClient <hostName> <portNumber>  
+    ./chatClient \<hostName\> \<portNumber\>  
     OR  
-    ./chatClient <ipAddress> <portNumber>  
+    ./chatClient \<ipAddress\> \<portNumber\>  
 --> The hostname or ipAddress should be of where the server is running.  
 --> portNumber should be the same number as what the server has.
 
