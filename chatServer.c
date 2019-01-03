@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h> 
 
 #include "chatServer.h"
 
@@ -21,13 +22,21 @@ int G_addrlen = sizeof(G_address);  //size of address --> accept()
 
 int clientList[2];
 
+pthread_mutex_t mutex_Closing = PTHREAD_MUTEX_INITIALIZER;
+
+
 int main (int argc, char ** argv) {
 
     //Make sure arguments are right
     checkArgs(argc, argv);
     G_port = getPortNumber(argv[1]);
 
+    //Set up a signal to catch ctrl + c, which ends program
+    signal(SIGINT, sigHandler);
+
     setConnection();
+
+    return 0;
 }
 
 //Find clients trying to connect
@@ -102,12 +111,39 @@ void *clientReadThread(void *args) {
         }
         finalName[i] = name[i];
     }
+    
+    char *connectedTo = NULL;
+    
+    connectedTo = (char*)malloc(sizeof(char) * (strlen(name) + 14));
+    strcat(connectedTo, "Connected to ");
+    strcat(connectedTo, name);
+    strcat(connectedTo, "\n");
+
+    if(clientList[0] != clientNum) {
+        send(clientList[0], connectedTo, (strlen(connectedTo) + 1), 0);
+    } else if (clientList[1] != clientNum) {
+        send(clientList[1], connectedTo, (strlen(connectedTo) + 1), 0);
+    }
 
     char buffer[500];
     int bufferLen = 500;
     //Read from both clients at any given time.
     while (1) {
         read(clientNum, buffer, bufferLen);
+        if(strcmp(buffer, "Client Closing Down") == 0) {
+            pthread_mutex_lock(&mutex_Closing);
+            printf("Client number %d disconnected.\n", clientNum);
+            //client is closing.
+            if(clientList[0] != clientNum) {
+                send(clientList[0], "Other user disconnected.", 25, 0);
+                printf("Client number %d disconnected.\n", clientList[0]);
+            } else if (clientList[1] != clientNum) {
+                send(clientList[1], "Other user disconnected.", 25, 0);
+                printf("Client number %d disconnected.\n", clientList[1]);
+            }
+            continue;
+            pthread_mutex_unlock(&mutex_Closing);
+        }
         sendMessage(clientNum, buffer, finalName);
 //        printf("%s", buffer);
     }
@@ -123,9 +159,9 @@ void sendMessage(int clientNum, char *buffer, char *name) {
 
     //The message sent also shows the client's name.
     if(clientList[0] != clientNum) {
-        send(clientList[0],finalStr, (strlen(finalStr) + 1), 0);
+        send(clientList[0], finalStr, (strlen(finalStr) + 1), 0);
     } else if (clientList[1] != clientNum) {
-        send(clientList[1],finalStr, (strlen(finalStr) + 1), 0);
+        send(clientList[1], finalStr, (strlen(finalStr) + 1), 0);
     }
 }
 //Make sure the entered port number is actually a number.
@@ -151,4 +187,9 @@ void checkArgs(int argc, char ** argv) {
         fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting.../n");
         exit(-1);
     }
+}
+
+void sigHandler (int sigNum) {
+    printf("Ctrl+C was pressed. Server shutting down...\n");
+    exit(-1);
 }

@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include "chatClient.h"
 
@@ -20,6 +21,7 @@
 //Messages sent/received can be 255 - (length of name) characters long
 
 int G_Port = -1;
+int G_socketfd = -1;
 
 //All these are for IP address
 struct addrinfo hints;
@@ -62,7 +64,7 @@ void startConnection(char *hostname) {
 
             int connectSuccess = -1;
             connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-            printf("connectSuccess: %d\n", connectSuccess);
+            //printf("connectSuccess: %d\n", connectSuccess);
             if (connectSuccess == 0) {
                 // Make sure connection is set.
                 char buffer[50];
@@ -83,6 +85,13 @@ void startConnection(char *hostname) {
             sleep(5);
         }
     }
+    //remove socketfd, and replace it with G_socketfd later. 
+    //For now, this is only for the signal, which was added near the end. 
+    G_socketfd = socketfd;
+
+    // Setting up signal once client is connected to the server.
+    // This will catch ctrl+c, which ends the program
+    signal(SIGINT, sigHandler);
 
     //Client enters their name or nickname for other client to see
     char name[50];
@@ -112,6 +121,12 @@ void *threadRead(void *args) {
     while(1) {
         strcpy(buffer, "somethingrandomthatnooneWillType");
         read(serverID, buffer, length);
+        if(strcmp(buffer, "Other user disconnected.") == 0) {
+            //printf("Server: %s", buffer);
+            printf("%s. ", buffer);
+            printf("Ending program now.\n");
+            exit(-1);
+        }
         if(strcmp(buffer, "somethingrandomthatnooneWillType") != 0) {
             //printf("Server: %s", buffer);
             printf("%s", buffer);
@@ -180,4 +195,10 @@ void checkArgs(int argc, char **argv) {
         fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting...\n");
         exit(-1);
     }
+}
+
+void sigHandler (int sigNum) {
+    printf("Ctrl+C was pressed. Client shutting down...\n");
+    send(G_socketfd, "Client Closing Down", 20, 0);
+    exit(-1);
 }
