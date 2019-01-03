@@ -22,6 +22,7 @@ int G_addrlen = sizeof(G_address);  //size of address --> accept()
 
 int clientList[2];
 
+// Need a mutex for printing out when clients disconnect
 pthread_mutex_t mutex_Closing = PTHREAD_MUTEX_INITIALIZER;
 
 
