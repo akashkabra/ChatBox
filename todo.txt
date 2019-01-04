@@ -9,3 +9,13 @@ TODO:
     same code number to be able to be connected to each other.
     --> After ending the chat, the code number will be freed.
     --> For now, it will only be done for 10 pairs (20 clients total)
+3. Create a page on personal website for this program with screenshots and
+    how the program works. This will basically be a page to show off what 
+    this program is about.
+4. Also, go through the program and try to find bugs and hen fix them.
+
+
+Maybe:
+    Eventually hard code the port number because one server can support multiple chats.
+    But.. if that port number is busy, it will be bad. Unless, the server is running 24/7,
+    which will not be the case.
