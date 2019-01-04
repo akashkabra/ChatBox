@@ -1,0 +1,11 @@
+TODO:
+
+1. Be able to support multiple pairs of users.
+    --> For example, two clients will be chatting 1 on 1, other two clients will be 
+    chatting on their own one on one chat.
+    --> This will be possible with just ONE server running.
+2. Create a data structure to hold the pairs of clients who are chatting together.
+    --> So, a client will enter a code number and the next client should enter the 
+    same code number to be able to be connected to each other.
+    --> After ending the chat, the code number will be freed.
+    --> For now, it will only be done for 10 pairs (20 clients total)
