@@ -69,8 +69,8 @@ void startConnection(char *hostname) {
                 // Make sure connection is set.
                 char buffer[50];
                 read(socketfd, buffer, 50);
-                if(strcmp(buffer, "Connection Successful!") != 0) {
-                    fprintf(stderr, "Fatal Error: Failed to connect.\n");
+                if(strcmp(buffer, "Server Message: Connection Successful!") != 0) {
+                    fprintf(stderr, "Fatal Error: Failed to connect. (Two clients already connected.)\n");
                     exit(-1);
                 }
                 printf("Successfully Connected to host \"%s\" with IP %s\n", hostname, ipAddress);
@@ -121,10 +121,15 @@ void *threadRead(void *args) {
     while(1) {
         strcpy(buffer, "somethingrandomthatnooneWillType");
         read(serverID, buffer, length);
-        if(strcmp(buffer, "Other user disconnected.") == 0) {
+        if(strcmp(buffer, "Server Message: Other user disconnected.") == 0) {
             //printf("Server: %s", buffer);
             printf("%s. ", buffer);
             printf("Ending program now.\n");
+            exit(-1);
+        }
+        if(strcmp(buffer, "Server Message: Server shutdown.") == 0) {
+            printf("%s\n", buffer);
+            printf("Shutting down program.\n");
             exit(-1);
         }
         if(strcmp(buffer, "somethingrandomthatnooneWillType") != 0) {

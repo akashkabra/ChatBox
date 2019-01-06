@@ -80,12 +80,12 @@ void setConnection() {
         //printf("SUCCESS \n");
         // Make sure only two client can connect.
         if (clientCounter == 2) {
-            char *failMessage = "Two Clients already connected";
+            char *failMessage = "Server Message: Two Clients already connected";
             send(tempAccept, failMessage, (strlen(failMessage) +1), 0);
             continue;
         }
         clientList[clientCounter] = tempAccept;
-        char *ackConnection = "Connection Successful!";
+        char *ackConnection = "Server Message: Connection Successful!";
         send(tempAccept, ackConnection, (strlen(ackConnection) +1), 0);
 
         //thread for the server to read messages from the client
@@ -136,10 +136,10 @@ void *clientReadThread(void *args) {
             printf("Client number %d disconnected.\n", clientNum);
             //client is closing.
             if(clientList[0] != clientNum) {
-                send(clientList[0], "Other user disconnected.", 25, 0);
+                send(clientList[0], "Server Message: Other user disconnected.", 41, 0);
                 printf("Client number %d disconnected.\n", clientList[0]);
             } else if (clientList[1] != clientNum) {
-                send(clientList[1], "Other user disconnected.", 25, 0);
+                send(clientList[1], "Server Message: Other user disconnected.", 41, 0);
                 printf("Client number %d disconnected.\n", clientList[1]);
             }
             continue;
@@ -192,5 +192,9 @@ void checkArgs(int argc, char ** argv) {
 
 void sigHandler (int sigNum) {
     printf("Ctrl+C was pressed. Server shutting down...\n");
+
+    send(clientList[0], "Server Message: Server shutdown.", 33, 0);
+    send(clientList[1], "Server Message: Server shutdown.", 33, 0);
+
     exit(-1);
 }
