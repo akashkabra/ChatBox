@@ -39,4 +39,6 @@ The client will try to connect to the host every five seconds if connection fail
 
 
 
-Screenshots coming soon!
+Screenshots:
+
+![Server Pic](https://github.com/akashkabra/ChatBox/blob/master/screenshots/client1.png)
