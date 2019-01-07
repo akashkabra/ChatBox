@@ -41,14 +41,14 @@ The client will try to connect to the host every five seconds if connection fail
 
 Screenshots:
 
-Server:
+Server:  
 ![Server Image](https://github.com/akashkabra/ChatBox/blob/master/screenshots/serverPic.png)
 
-Client 1:
+Client 1:  
 ![Client 1 Image](https://github.com/akashkabra/ChatBox/blob/master/screenshots/client1.png)
 
-Client 2:
+Client 2:  
 ![Client 2 Image](https://github.com/akashkabra/ChatBox/blob/master/screenshots/client2.png)
 
-Client 3:
+Client 3:  
 ![Client 3 Image](https://github.com/akashkabra/ChatBox/blob/master/screenshots/client3.png)
