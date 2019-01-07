@@ -40,8 +40,8 @@ int main (int argc, char **argv) {
 
 // Sets up the whole socket and connection with server.
 void startConnection(char *hostname) {
-    int socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketfd == -1) {
+    G_socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (G_socketfd == -1) {
         fprintf(stderr, "Fatal Error: (socket()): %d: %s\n", errno, strerror(errno));
         exit(-1);
     }
@@ -63,12 +63,12 @@ void startConnection(char *hostname) {
             inet_pton(AF_INET, ipAddress, &serverAddr.sin_addr);
 
             int connectSuccess = -1;
-            connectSuccess = connect(socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+            connectSuccess = connect(G_socketfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
             //printf("connectSuccess: %d\n", connectSuccess);
             if (connectSuccess == 0) {
                 // Make sure connection is set.
                 char buffer[50];
-                read(socketfd, buffer, 50);
+                read(G_socketfd, buffer, 50);
                 if(strcmp(buffer, "Server Message: Connection Successful!") != 0) {
                     fprintf(stderr, "Fatal Error: Failed to connect. (Two clients already connected.)\n");
                     exit(-1);
@@ -85,9 +85,6 @@ void startConnection(char *hostname) {
             sleep(5);
         }
     }
-    //remove socketfd, and replace it with G_socketfd later. 
-    //For now, this is only for the signal, which was added near the end. 
-    G_socketfd = socketfd;
 
     // Setting up signal once client is connected to the server.
     // This will catch ctrl+c, which ends the program
@@ -97,13 +94,13 @@ void startConnection(char *hostname) {
     char name[50];
     printf("Please enter your first name: ");
     fgets(name, 50, stdin);
-    send(socketfd, name, 50, 0);
+    send(G_socketfd, name, 50, 0);
 
     // Threads for the client to send and read messages at any time.
     pthread_t tidRead;
     pthread_t tidSend;
-    pthread_create(&tidRead, NULL, threadRead, &socketfd);
-    pthread_create(&tidSend, NULL, threadSend, &socketfd);
+    pthread_create(&tidRead, NULL, threadRead, NULL);
+    pthread_create(&tidSend, NULL, threadSend, NULL);
 
     while(1) { /* Keep programing running */}
 
@@ -112,15 +109,13 @@ void startConnection(char *hostname) {
 
 // Thread for getting messages from the server (from the other client)
 void *threadRead(void *args) {
-    int *temp = (int*)args;
-    int serverID = *temp;
     //Messages can be 255 characters long -> (255 - length of name)
     char buffer[256];
     int length = 256;
 
     while(1) {
         strcpy(buffer, "somethingrandomthatnooneWillType");
-        read(serverID, buffer, length);
+        read(G_socketfd, buffer, length);
         if(strcmp(buffer, "Server Message: Other user disconnected.") == 0) {
             //printf("Server: %s", buffer);
             printf("%s. ", buffer);
@@ -141,15 +136,13 @@ void *threadRead(void *args) {
 
 // Thread for sending messages to the server (which sends to other client)
 void *threadSend(void *args) {
-    int *temp = (int*)args;
-    int serverID = *temp;
     //Messages can be 255 characters long -> (255 - length of other client name)
     char buffer[256];
     int length = 256;
 
     while(1) {
         fgets(buffer, length, stdin);
-        send(serverID, buffer, length, 0);
+        send(G_socketfd, buffer, length, 0);
     }
 }
 
