@@ -81,6 +81,7 @@ void setConnection() {
         // Make sure only two client can connect.
         if (clientCounter == 2) {
             char *failMessage = "Server Message: Two Clients already connected";
+            printf("Client %d tried to connect, but failed because 2 clients already connected.\n", tempAccept);
             send(tempAccept, failMessage, (strlen(failMessage) +1), 0);
             continue;
         }
@@ -185,7 +186,7 @@ void checkArgs(int argc, char ** argv) {
     *   exec file name, port number
     */
     if(argc != 2) {
-        fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting.../n");
+        fprintf(stderr, "Fatal Error: Wrong amount of arguments. Exiting...\n");
         exit(-1);
     }
 }
